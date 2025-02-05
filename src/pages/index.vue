@@ -110,13 +110,12 @@ import { ref } from "vue";
 import axios from "axios";
 
 let data = ref([]);
-const getData = () => {
-  axios
-    .get("http://nexifytw.mynetgear.com:45000/api/Record/GetRecords")
-    .then((res) => {
-      data.value = res.data.Data;
-      console.log("data:", data);
-    });
+const getData = async () => {
+  const res = await axios.get(
+    "http://nexifytw.mynetgear.com:45000/api/Record/GetRecords"
+  );
+  data.value = res.data.Data;
+  console.log("data:", data);
 };
 
 const addRow = () => {
@@ -129,16 +128,13 @@ const addRow = () => {
   console.log("addRow", data);
 };
 
-const saveData = () => {
-  axios
-    .post(
-      "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
-      data.value
-    )
-    .then((res) => {
-      console.log("saveData", res);
-      console.log("newDataValue", data);
-      getData();
-    });
+const saveData = async () => {
+  const res = await axios.post(
+    "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
+    data.value
+  );
+  console.log("saveData:", res);
+  console.log("newDataValue", data);
+  getData();
 };
 </script>
