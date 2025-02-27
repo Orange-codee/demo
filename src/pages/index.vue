@@ -113,15 +113,23 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
-console.log("3rd");
+console.log("3rd-20250227");
 let data = ref([]);
 const getData = async () => {
-  const res = await axios.get(
-    "http://nexifytw.mynetgear.com:45000/api/Record/GetRecords"
-  );
-  data.value = res.data.Data;
-  console.log("getData中res:", res);
-  console.log("data:", data);
+  try {
+    const res = await axios.get(
+      "http://nexifytw.mynetgear.com:45000/api/Record/GetRecords"
+    );
+    if (res.data.Success) {
+      data.value = res.data.Data;
+      console.log("getData中res:", res);
+      console.log("data:", data);
+    } else {
+      throw new Error(res.data.Msg || "儲存失敗。");
+    }
+  } catch (error) {
+    return alert(error);
+  }
 };
 
 const addRow = () => {
@@ -135,21 +143,29 @@ const addRow = () => {
 };
 
 const saveData = async () => {
-  const isValid = data.value.every(item => item.Name !== "");
-  if (!isValid) {
-    return alert("儲存失敗。請避免Name值為空。");
-  }
-  const res = await axios.post(
-    "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
-    data.value
-  );
-  if (res.data.Success) {
-    console.log("saveData:", res);
-    console.log("newDataValue:", data);
-    alert("儲存成功。");
-    getData();
-  } else {
-    alert("儲存失敗，請避免Name值為重複。");
+  const isValid = data.value.every((item) => item.Name !== "");
+  const nameSet = new Set(data.value.map((item) => item.Name));
+  const isUnique = nameSet.size === data.value.length;
+
+  try {
+    //資料驗證
+    if (!isValid) throw new Error("儲存失敗。請避免Name 為空值。");
+    if (!isUnique) throw new Error("儲存失敗。請避免Name 為重複。");
+    //API請求
+    const res = await axios.post(
+      "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
+      data.value
+    );
+    if (res.data.Success) {
+      console.log("saveData:", res);
+      console.log("newDataValue:", data);
+      alert("儲存成功。");
+      getData();
+    } else {
+      throw new Error(res.data.Msg || "儲存失敗。");
+    }
+  } catch (error) {
+    return alert(error);
   }
 };
 
