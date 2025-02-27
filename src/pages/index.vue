@@ -113,20 +113,19 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
-console.log("3rd-20250227");
-let data = ref([]);
+console.log("3rd-20250227+");
+const data = ref([]);
 const getData = async () => {
   try {
     const res = await axios.get(
       "http://nexifytw.mynetgear.com:45000/api/Record/GetRecords"
     );
-    if (res.data.Success) {
-      data.value = res.data.Data;
-      console.log("getData中res:", res);
-      console.log("data:", data);
-    } else {
-      throw new Error(res.data.Msg || "儲存失敗。");
-    }
+    const { Data = [] } = res.data; // 解構賦值，給 Data 設置默認值為空陣列
+    if (!res?.data?.Success) throw new Error(res.data.Msg || "儲存失敗。");
+    // data.value = res.data.Data;
+    data.value = Data;
+    console.log("getData中res:", res);
+    console.log("data:", data);
   } catch (error) {
     return alert(error);
   }
@@ -156,14 +155,11 @@ const saveData = async () => {
       "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
       data.value
     );
-    if (res.data.Success) {
-      console.log("saveData:", res);
-      console.log("newDataValue:", data);
-      alert("儲存成功。");
-      getData();
-    } else {
-      throw new Error(res.data.Msg || "儲存失敗。");
-    }
+    if (!res?.data?.Success) throw new Error(res.data.Msg || "儲存失敗。");
+    console.log("saveData:", res);
+    console.log("newDataValue:", data);
+    alert("儲存成功。");
+    getData();
   } catch (error) {
     return alert(error);
   }
