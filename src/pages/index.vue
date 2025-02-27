@@ -12,7 +12,8 @@
           </v-btn><v-btn
             variant="outlined"
             color="teal"
-            @click="saveData"
+            type="submit"
+            @click.prevent="saveData"
           >
             Save
           </v-btn>
@@ -24,82 +25,86 @@
             Update
           </v-btn>
         </div>
-        <v-table>
-          <thead>
-            <tr>
-              <th
-                class="text-left"
-                width="200"
+        <v-form>
+          <v-table>
+            <thead>
+              <tr>
+                <th
+                  class="text-left"
+                  width="200"
+                >
+                  <v-icon icon="mdi-account" />
+                  Name
+                </th>
+                <th
+                  class="text-left"
+                  width="300"
+                >
+                  <v-icon icon="mdi-cake-variant" />
+                  Birthday
+                </th>
+                <th class="text-left">
+                  <v-icon icon="mdi-currency-usd" />
+                  Salary
+                </th>
+                <th
+                  class="text-left"
+                  width="200"
+                >
+                  <v-icon icon="mdi-home" />
+                  Address
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(item, key) in data"
+                :key="'item' + key"
               >
-                <v-icon icon="mdi-account" />
-                Name
-              </th>
-              <th
-                class="text-left"
-                width="300"
-              >
-                <v-icon icon="mdi-cake-variant" />
-                Birthday
-              </th>
-              <th class="text-left">
-                <v-icon icon="mdi-currency-usd" />
-                Salary
-              </th>
-              <th
-                class="text-left"
-                width="200"
-              >
-                <v-icon icon="mdi-home" />
-                Address
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="(item, key) in data"
-              :key="'item' + key"
-            >
-              <td width="200">
-                <v-text-field
-                  v-model.trim="item.Name"
-                  label="Name"
-                  variant="outlined"
-                  density="compact"
-                  class="mt-5"
-                />
-              </td>
-              <td width="300">
-                <v-text-field
-                  v-model="item.DateOfBirth"
-                  :value="item.DateOfBirth.split('T')[0]"
-                  label="Birthday"
-                  type="date"
-                  variant="outlined"
-                  density="compact"
-                  class="mt-5"
-                />
-              </td>
-              <td>
-                <v-slider
-                  v-model="item.Salary"
-                  color="teal-darken-4"
-                  max="100000"
-                  min="0"
-                  class="mt-5"
-                />
-              </td>
-              <td width="200">
-                <v-text-field
-                  v-model.trim="item.Address"
-                  label="Address"
-                  variant="outlined"
-                  density="compact"
-                  class="mt-5"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </v-table>
+                <td width="200">
+                  <v-text-field
+                    v-model.trim="item.Name"
+                    :rules="nameRules"
+                    required
+                    label="Name"
+                    variant="outlined"
+                    density="compact"
+                    class="mt-5"
+                  />
+                </td>
+                <td width="300">
+                  <v-text-field
+                    v-model="item.DateOfBirth"
+                    :value="item.DateOfBirth.split('T')[0]"
+                    label="Birthday"
+                    type="date"
+                    variant="outlined"
+                    density="compact"
+                    class="mt-5"
+                  />
+                </td>
+                <td>
+                  <v-slider
+                    v-model="item.Salary"
+                    color="teal-darken-4"
+                    max="100000"
+                    min="0"
+                    class="mt-5"
+                  />
+                </td>
+                <td width="200">
+                  <v-text-field
+                    v-model.trim="item.Address"
+                    label="Address"
+                    variant="outlined"
+                    density="compact"
+                    class="mt-5"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </v-table>
+        </v-form>
       </v-col>
     </v-row>
   </v-container>
@@ -108,13 +113,14 @@
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
-
+console.log("3rd");
 let data = ref([]);
 const getData = async () => {
   const res = await axios.get(
     "http://nexifytw.mynetgear.com:45000/api/Record/GetRecords"
   );
   data.value = res.data.Data;
+  console.log("getData中res:", res);
   console.log("data:", data);
 };
 
@@ -129,12 +135,29 @@ const addRow = () => {
 };
 
 const saveData = async () => {
+  const isValid = data.value.every(item => item.Name !== "");
+  if (!isValid) {
+    return alert("儲存失敗。請避免Name值為空。");
+  }
   const res = await axios.post(
     "http://nexifytw.mynetgear.com:45000/api/Record/SaveRecords",
     data.value
   );
-  console.log("saveData:", res);
-  console.log("newDataValue", data);
-  getData();
+  if (res.data.Success) {
+    console.log("saveData:", res);
+    console.log("newDataValue:", data);
+    alert("儲存成功。");
+    getData();
+  } else {
+    alert("儲存失敗，請避免Name值為重複。");
+  }
 };
+
+const nameRules = [
+  (value) => {
+    if (value) return true;
+
+    return "請輸入姓名";
+  },
+];
 </script>
